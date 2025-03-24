@@ -1,1 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>AI Based Language Learner</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Example of a font and basic reset -->
+  <link href="https://fonts.googleapis.com/css?family=Roboto:400,500&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0; 
+      padding: 0; 
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: #f7f5eb;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      color: #333;
+    }
+    header {
+      background-color: #fff;
+      border-bottom: 1px solid #ccc;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 {
+      font-size: 1.4rem;
+      color: #444;
+    }
+    .generate-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .generate-section button {
+      background: #47a64a;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .generate-section button:hover {
+      background: #3d8e3f;
+    }
+    main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+    /* Left column: Original text */
+    .left-column {
+      width: 50%;
+      padding: 20px;
+      overflow-y: auto;
+      border-right: 1px solid #ccc;
+    }
+    .left-column h2 {
+      margin-bottom: 15px;
+      font-size: 1rem;
+      color: #4c754f;
+    }
+    /* Right column: Explanation sections */
+    .right-column {
+      width: 50%;
+      padding: 20px;
+      overflow-y: auto;
+      background-color: #fbfaf5;
+    }
+    .right-column h2 {
+      margin: 15px 0 5px;
+      font-size: 1rem;
+      color: #6d7f89;
+    }
+    .explanation {
+      background-color: #fff;
+      padding: 15px;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+      min-height: 80px;
+      white-space: pre-wrap;
+      font-size: 0.95rem;
+    }
+    /* Word styling */
+    .word {
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .word:hover {
+      background-color: #e0e7dc;
+    }
+    /* Flashcards Section */
+    #flashcardSection {
+      padding: 20px;
+      border-top: 1px solid #ccc;
+      background-color: #fff;
+    }
+    #flashcardSection h2 {
+      margin-bottom: 10px;
+      font-size: 1.2rem;
+      color: #4c754f;
+    }
+    #flashcardContainer {
+      border: 2px solid #47a64a;
+      padding: 20px;
+      border-radius: 8px;
+      min-height: 100px;
+      font-size: 1rem;
+      margin-bottom: 10px;
+      text-align: center;
+      white-space: pre-wrap;
+    }
+    .flashcard-controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .flashcard-controls button, #generateFlashcardsBtn {
+      background: #47a64a;
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    .flashcard-controls button:hover, #generateFlashcardsBtn:hover {
+      background: #3d8e3f;
+    }
+    footer {
+      background-color: #f0f0f0;
+      padding: 10px 20px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <h1>AI Based Language Learner</h1>
+    <div class="generate-section">
+      <!-- Language or theme input (optional) -->
+      <select id="languageSelect">
+        <option value="German story about a train journey">German (Train Journey)</option>
+        <option value="French story about a sunny day">French (Sunny Day)</option>
+        <option value="Spanish story about a walk in the park">Spanish (Walk in the Park)</option>
+      </select>
+      <button id="generateBtn">Generate Short Story</button>
+    </div>
+  </header>
+
+  <!-- Main two-column layout -->
+  <main>
+    <div class="left-column">
+      <h2>Original Text</h2>
+      <div id="storyContainer">
+        <!-- Generated story will appear here -->
+      </div>
+    </div>
+    <div class="right-column">
+      <h2>Translation / Explanation</h2>
+      <div id="explanationBox" class="explanation">
+        Select a word or highlight text to see translation/explanation.
+      </div>
+      <h2 id="grammarTitle" style="display:none;">Grammar Explanation</h2>
+      <div id="grammarBox" class="explanation" style="display:none;">
+        <!-- Grammar explanation will appear here when a single word is selected -->
+      </div>
+      <h2 id="etymologyTitle" style="display:none;">Etymology</h2>
+      <div id="etymologyBox" class="explanation" style="display:none;">
+        <!-- Etymology will appear here when a single word is selected -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Flashcards Section -->
+  <section id="flashcardSection">
+    <h2>Flashcards</h2>
+    <div id="flashcardContainer">
+      Dummy flashcards will appear here.
+    </div>
+    <div class="flashcard-controls">
+      <button id="prevFlashcardBtn">Previous</button>
+      <button id="flipFlashcardBtn">Flip</button>
+      <button id="nextFlashcardBtn">Next</button>
+    </div>
+    <button id="generateFlashcardsBtn">Generate Flashcards</button>
+  </section>
+
+  <footer>
+    &copy; 2025 AI Based Language Learner
+  </footer>
+
+  <script>
+    /*******************************************************
+     * WARNING: Storing an API key in client code is unsafe.
+     * This is for DEMO ONLY. Use a secure server in production.
+     *******************************************************/
+    const openAiApiKey = "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";
+
+    const generateBtn = document.getElementById("generateBtn");
+    const languageSelect = document.getElementById("languageSelect");
+    const storyContainer = document.getElementById("storyContainer");
+    const explanationBox = document.getElementById("explanationBox");
+    const grammarBox = document.getElementById("grammarBox");
+    const etymologyBox = document.getElementById("etymologyBox");
+    const grammarTitle = document.getElementById("grammarTitle");
+    const etymologyTitle = document.getElementById("etymologyTitle");
+    
+    // Flashcard elements
+    const flashcardContainer = document.getElementById("flashcardContainer");
+    const prevFlashcardBtn = document.getElementById("prevFlashcardBtn");
+    const nextFlashcardBtn = document.getElementById("nextFlashcardBtn");
+    const flipFlashcardBtn = document.getElementById("flipFlashcardBtn");
+    const generateFlashcardsBtn = document.getElementById("generateFlashcardsBtn");
+
+    let currentLanguagePrompt = languageSelect.value;
+    let currentStoryText = "";
+    let flashcards = [];
+    let currentFlashcardIndex = 0;
+    let flashcardSide = "front"; // "front" shows the word; "back" shows translation and explanation
+
+    languageSelect.addEventListener('change', () => {
+      currentLanguagePrompt = languageSelect.value;
+    });
+
+    generateBtn.addEventListener('click', async () => {
+      explanationBox.textContent = "Generating story...";
+      storyContainer.innerHTML = "";
+      // Hide extra sections when new story is generated
+      grammarTitle.style.display = "none";
+      grammarBox.style.display = "none";
+      etymologyTitle.style.display = "none";
+      etymologyBox.style.display = "none";
+      generateBtn.disabled = true;
+
+      const prompt = `Please write a 300-word short story in ${currentLanguagePrompt}.`;
+      try {
+        const story = await generateShortStory(prompt);
+        currentStoryText = story;
+        displayStory(story);
+        explanationBox.textContent = "Story generated. Click on a word or highlight text for details.";
+      } catch (err) {
+        console.error(err);
+        explanationBox.textContent = "Error generating story. Please try again.";
+      } finally {
+        generateBtn.disabled = false;
+      }
+    });
+
+    async function generateShortStory(prompt) {
+      const apiUrl = "https://api.openai.com/v1/chat/completions";
+      const requestBody = {
+        model: "gpt-4o-mini", // or "gpt-4" if available to your key
+        messages: [
+          { role: "system", content: "You are a helpful assistant that writes short stories." },
+          { role: "user", content: prompt }
+        ],
+        max_tokens: 700,
+        temperature: 0.8
+      };
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openAiApiKey}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data && data.choices && data.choices.length > 0) {
+        return data.choices[0].message.content.trim();
+      } else {
+        throw new Error("No story received from OpenAI.");
+      }
+    }
+
+    // Display the story by splitting into sentences and words.
+    function displayStory(storyText) {
+      storyContainer.innerHTML = "";
+      // Split story into sentences based on punctuation.
+      const sentences = storyText.match(/[^.!?]+[.!?]+/g) || [storyText];
+
+      sentences.forEach(sentence => {
+        const paragraph = document.createElement("p");
+        // Split sentence into words while preserving spaces.
+        const words = sentence.split(" ");
+        words.forEach(word => {
+          const wordSpan = document.createElement("span");
+          wordSpan.className = "word";
+          wordSpan.textContent = word;
+          wordSpan.addEventListener("click", (e) => {
+            e.stopPropagation();
+            processSelectedText(word);
+          });
+          paragraph.appendChild(wordSpan);
+          paragraph.appendChild(document.createTextNode(" "));
+        });
+        storyContainer.appendChild(paragraph);
+      });
+    }
+
+    // Process selected text: single word vs. multiple words.
+    function processSelectedText(text) {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      const wordCount = trimmed.split(/\s+/).length;
+      // For single word, show translation, grammar, and etymology.
+      if (wordCount === 1) {
+        getExplanation(trimmed);
+        getGrammarExplanation(trimmed);
+        getEtymology(trimmed);
+        grammarTitle.style.display = "block";
+        grammarBox.style.display = "block";
+        etymologyTitle.style.display = "block";
+        etymologyBox.style.display = "block";
+      } else {
+        // For multiple words, show only translation/explanation.
+        getExplanation(trimmed);
+        grammarTitle.style.display = "none";
+        grammarBox.style.display = "none";
+        etymologyTitle.style.display = "none";
+        etymologyBox.style.display = "none";
+      }
+    }
+
+    // Also allow text selection (for phrases or multiple words) via mouseup.
+    storyContainer.addEventListener("mouseup", () => {
+      setTimeout(() => {
+        const selectedText = window.getSelection().toString().trim();
+        if (selectedText && selectedText.split(/\s+/).length > 1) {
+          processSelectedText(selectedText);
+        }
+        window.getSelection().removeAllRanges();
+      }, 10);
+    });
+
+    // Get translation/explanation for any text.
+    async function getExplanation(text) {
+      explanationBox.textContent = "Translating/Explaining...";
+      const prompt = `Please translate the following text into English and provide a brief explanation if necessary:\n\n"${text}"`;
+
+      try {
+        const result = await callOpenAiAPI(prompt, "gpt-4o-mini", 300, 0.3);
+        explanationBox.textContent = result;
+      } catch (error) {
+        console.error("Error:", error);
+        explanationBox.textContent = "Error translating/explaining text.";
+      }
+    }
+
+    // Get grammar explanation for a single word.
+    async function getGrammarExplanation(word) {
+      grammarBox.textContent = "Generating grammar explanation...";
+      const prompt = `Please provide a detailed grammar explanation for the word "${word}". Include its part(s) of speech, common usage, and any relevant grammar notes.`;
+      try {
+        const result = await callOpenAiAPI(prompt, "gpt-4o-mini", 200, 0.3);
+        grammarBox.textContent = result;
+      } catch (error) {
+        console.error("Error:", error);
+        grammarBox.textContent = "Error generating grammar explanation.";
+      }
+    }
+
+    // Get etymology for a single word.
+    async function getEtymology(word) {
+      etymologyBox.textContent = "Fetching etymology...";
+      const prompt = `Please provide the etymology of the word "${word}". Include its language of origin and historical development if available.`;
+      try {
+        const result = await callOpenAiAPI(prompt, "gpt-4o", 200, 0.3);
+        etymologyBox.textContent = result;
+      } catch (error) {
+        console.error("Error:", error);
+        etymologyBox.textContent = "Error fetching etymology.";
+      }
+    }
+
+    // Helper function to call OpenAI's API.
+    async function callOpenAiAPI(prompt, model, maxTokens, temperature) {
+      const apiUrl = "https://api.openai.com/v1/chat/completions";
+      const requestBody = {
+        model: model,
+        messages: [
+          {
+            role: "system",
+            content: "You are a bilingual assistant that provides translations, explanations, grammar notes, and etymology details."
+          },
+          {
+            role: "user",
+            content: prompt
+          }
+        ],
+        max_tokens: maxTokens,
+        temperature: temperature
+      };
+
+      const response = await fetch(apiUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${openAiApiKey}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      if (!response.ok) {
+        throw new Error(`OpenAI API error: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      if (data && data.choices && data.choices.length > 0) {
+        return data.choices[0].message.content.trim();
+      } else {
+        throw new Error("No response received from OpenAI.");
+      }
+    }
+
+    // =======================
+    // FLASHCARDS FUNCTIONALITY (DUMMY DATA)
+    // =======================
+
+    // Generate dummy flashcards with simple German words.
+    function generateFlashcards() {
+      flashcards = [
+        { word: "Haus", translation: "House", explanation: "A building for human habitation." },
+        { word: "Baum", translation: "Tree", explanation: "A woody perennial plant." },
+        { word: "Buch", translation: "Book", explanation: "A set of printed pages bound together." },
+        { word: "Katze", translation: "Cat", explanation: "A small domesticated carnivorous mammal." },
+        { word: "Auto", translation: "Car", explanation: "A road vehicle powered by an engine." }
+      ];
+      currentFlashcardIndex = 0;
+      flashcardSide = "front";
+      showFlashcard(currentFlashcardIndex);
+    }
+
+    // Display a flashcard based on the current index and side.
+    function showFlashcard(index) {
+      if (!flashcards || flashcards.length === 0) {
+        flashcardContainer.textContent = "No flashcards available.";
+        return;
+      }
+      const card = flashcards[index];
+      if (flashcardSide === "front") {
+        flashcardContainer.textContent = card.word;
+      } else {
+        flashcardContainer.textContent = `Translation: ${card.translation}\n\nExplanation: ${card.explanation}`;
+      }
+    }
+
+    // Event listeners for flashcard controls.
+    flipFlashcardBtn.addEventListener("click", () => {
+      flashcardSide = flashcardSide === "front" ? "back" : "front";
+      showFlashcard(currentFlashcardIndex);
+    });
+
+    nextFlashcardBtn.addEventListener("click", () => {
+      if (flashcards && flashcards.length > 0) {
+        currentFlashcardIndex = (currentFlashcardIndex + 1) % flashcards.length;
+        flashcardSide = "front";
+        showFlashcard(currentFlashcardIndex);
+      }
+    });
+
+    prevFlashcardBtn.addEventListener("click", () => {
+      if (flashcards && flashcards.length > 0) {
+        currentFlashcardIndex = (currentFlashcardIndex - 1 + flashcards.length) % flashcards.length;
+        flashcardSide = "front";
+        showFlashcard(currentFlashcardIndex);
+      }
+    });
+
+    // Generate dummy flashcards when the button is pressed.
+    generateFlashcardsBtn.addEventListener("click", generateFlashcards);
+  </script>
+</body>
+</html>
 
