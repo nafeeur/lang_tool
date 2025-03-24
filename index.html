@@ -356,7 +356,7 @@
       const prompt = `Please translate the following text into English and provide a brief explanation if necessary:\n\n"${text}"`;
 
       try {
-        const result = await callOpenAiAPI(prompt, "gpt-4o-mini", 300, 0.3);
+        const result = await callOpenAiAPI(prompt, "gpt-4o", 300, 0.3);
         explanationBox.textContent = result;
       } catch (error) {
         console.error("Error:", error);
